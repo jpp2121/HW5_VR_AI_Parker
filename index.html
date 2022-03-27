@@ -1,0 +1,87 @@
+<html>
+<head>
+  <script src='https://aframe.io/releases/1.2.0/aframe.min.js'></script>
+  <!-- Include html embed component, that allows embedding html elements -->
+  <script src="https://supereggbert.github.io/aframe-htmlembed-component/dist/build.js"></script>
+  <style>
+    .wrapper {
+      background: #cc0707;
+      width: 600px;
+      height: 300px;
+    }
+    .example {
+      padding: 20px;
+      font-size: 50px;
+      color: #fff;
+    }
+    .resultData {
+      padding: 20px;
+      font-size: 50px;
+      color: rgb(0, 0, 0);
+    }
+  </style>
+</head>
+<body>
+  <a-scene>
+    <!-- Create clickable events -->
+    <a-entity position="0 0 0" cursor="fuse: false; rayOrigin: mouse;"
+      raycaster="far: ${customFields.libVersion}; objects: .clickable"></a-entity>
+    <!-- Pay attention to htmlembed attribute -->
+    <a-entity position="-3 0 -3" htmlembed class="clickable">
+      <div class="wrapper">
+        <div class="example"></div>
+      </div>
+    </a-entity>
+    <a-entity position="3 0 -3" htmlembed class="clickable2">
+      <div class="wrapper">
+        <div class="resultData"></div>
+      </div>
+    </a-entity>
+    <!--- creating a plane to serve as a button-->
+    <a-plane class="clickable" position='0 0 -3' src="question.png" rotation='0 0 0' width='2' height='2' id = "q"></a-plane>
+    <a-sky color='#ECECEC'></a-sky>
+  </a-scene>
+</body>
+<script>
+  // Declare variables
+  var example = document.querySelector(".example");
+  var resultData = document.querySelector(".resultData");
+  var clickableArea = document.querySelector(".clickable");
+  // variable for the button
+  var q = document.querySelector("#q");
+  //creating a copy of the result to display on another plane
+  var resultData2 = document.querySelector(".resultData2");
+  var clickableArea2 = document.querySelector(".clickable2");
+  // Create array with three sentences
+  var myList = ["Paris is the [MASK] of France", "The [MASK] of United States is Joe Biden", "Athens is [MASK] in Greece"]
+  // Get random sentence from the array
+  var randomlySelected = myList[Math.floor(Math.random() * myList.length)];
+  // Put randomly selected array into example div
+  example.innerHTML = randomlySelected;
+
+  // Create event listener, i.e. on click for the question button 
+  q.addEventListener("click", function () {
+    // here I am making the original a-entity clickable invisible
+    clickableArea.setAttribute("visible", false);
+    // here I am making an animation to for the second a-entity to grow
+    clickableArea2.setAttribute("animation", "property: position; to: 0 3 0; dur: 6000; loop: true")
+    // The code below is copied from the API generated in hugging face
+    // The only things we change/add are: data: [randomlySelected]
+    // resultData.innerHTML = json_response.data[0]  
+    fetch("https://hf.space/gradioiframe/Akbartus/masking/+/api/predict/", { method: "POST", body: JSON.stringify({ data: [randomlySelected] }), headers: { "Content-Type": "application/json" } })
+      .then(function (response) {
+        return response.json();
+      })
+      .then(function (json_response) {
+        console.log(json_response.data[0]);
+        //this is the result back from your API to be output on my second a-entity
+        resultData.innerHTML = json_response.data[0];
+      });
+  })
+
+
+
+
+</script>
+
+</html>
